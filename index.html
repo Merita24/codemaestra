@@ -1302,10 +1302,10 @@
 
   <script>
     function openModal(type) {
-      const modal = document.getElementById('modal');
-      const tag = document.getElementById('modal-tag');
-      const title = document.getElementById('modal-title');
-      const sub = document.getElementById('modal-sub');
+      const modal    = document.getElementById('modal');
+      const tag      = document.getElementById('modal-tag');
+      const title    = document.getElementById('modal-title');
+      const sub      = document.getElementById('modal-sub');
       const formType = document.getElementById('form-type');
       const submitBtn = document.getElementById('submit-btn');
       const interestLabel = document.getElementById('interest-label');
@@ -1315,19 +1315,19 @@
       document.getElementById('signup-form').reset();
 
       if (type === 'taster') {
-        tag.textContent = '⚡ Free taster session';
-        title.innerHTML = 'Reserve your<br>free spot';
-        sub.textContent = 'Fill in your details and Merita will contact you to confirm your spot and share the session details.';
-        submitBtn.textContent = 'Reserve my free spot →';
+        tag.textContent          = '⚡ Free taster session';
+        title.innerHTML          = 'Reserve your<br>free spot';
+        sub.textContent          = 'Fill in your details and Merita will contact you within 24 hours to confirm your spot.';
+        submitBtn.textContent    = 'Reserve my free spot →';
         interestLabel.textContent = 'What are you hoping to learn or do with AI?';
-        formType.value = 'taster';
+        formType.value           = 'Free Taster Session';
       } else {
-        tag.textContent = '🚀 Cohort 2 — starts June 2';
-        title.innerHTML = 'Enrol in<br>Cohort 2';
-        sub.textContent = 'Fill in your details and Merita will be in touch to complete your enrolment and share payment details.';
-        submitBtn.textContent = 'Send enrolment request →';
+        tag.textContent          = '🚀 Cohort 2 — starts June 2';
+        title.innerHTML          = 'Enrol in<br>Cohort 2';
+        sub.textContent          = 'Fill in your details and Merita will be in touch within 24 hours to complete your enrolment.';
+        submitBtn.textContent    = 'Send enrolment request →';
         interestLabel.textContent = 'What do you most want to achieve with this course?';
-        formType.value = 'enrol';
+        formType.value           = 'Full Course Enrolment — Cohort 2';
       }
 
       modal.classList.add('active');
@@ -1343,54 +1343,45 @@
       if (e.target === document.getElementById('modal')) closeModal();
     }
 
-    function submitForm(e) {
+    async function submitForm(e) {
       e.preventDefault();
-      const form = document.getElementById('signup-form');
+      const form       = document.getElementById('signup-form');
+      const submitBtn  = document.getElementById('submit-btn');
+      const formType   = document.getElementById('form-type').value;
+
+      submitBtn.textContent = 'Sending…';
+      submitBtn.disabled    = true;
+
       const data = new FormData(form);
-      const type = data.get('form-type');
 
-      const name = data.get('fname') + ' ' + data.get('lname');
-      const email = data.get('email');
-      const phone = data.get('phone');
-      const role = data.get('role');
-      const interest = data.get('interest');
+      try {
+        const response = await fetch('https://formspree.io/f/mdajolng', {
+          method: 'POST',
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        });
 
-      const subject = type === 'taster'
-        ? 'Free Taster Session Sign-Up: ' + name
-        : 'Course Enrolment Request: ' + name;
+        if (response.ok) {
+          document.getElementById('form-view').style.display   = 'none';
+          const successView  = document.getElementById('success-view');
+          const successTitle = document.getElementById('success-title');
+          const successMsg   = document.getElementById('success-msg');
 
-      const body = [
-        'Name: ' + name,
-        'Email: ' + email,
-        'Phone/WhatsApp: ' + phone,
-        'Role: ' + role,
-        'Interest: ' + (interest || 'Not specified'),
-        '',
-        type === 'taster'
-          ? 'This person has signed up for the FREE TASTER SESSION.'
-          : 'This person wants to ENROL in Cohort 2 (June 2).'
-      ].join('\n');
-
-      const mailtoLink = 'mailto:codemaestraacademy@gmail.com'
-        + '?subject=' + encodeURIComponent(subject)
-        + '&body=' + encodeURIComponent(body);
-
-      window.location.href = mailtoLink;
-
-      document.getElementById('form-view').style.display = 'none';
-      const successView = document.getElementById('success-view');
-      const successTitle = document.getElementById('success-title');
-      const successMsg = document.getElementById('success-msg');
-
-      if (type === 'taster') {
-        successTitle.textContent = 'Spot reserved! 🎉';
-        successMsg.textContent = 'Merita will reach out within 24 hours on WhatsApp or email to confirm your free taster session details.';
-      } else {
-        successTitle.textContent = 'Enrolment request sent! 🚀';
-        successMsg.textContent = 'Merita will be in touch within 24 hours to complete your enrolment and share payment details for Cohort 2.';
+          if (formType === 'Free Taster Session') {
+            successTitle.textContent = 'Spot reserved! 🎉';
+            successMsg.textContent   = 'Merita will reach out within 24 hours on WhatsApp or email to confirm your free taster session details.';
+          } else {
+            successTitle.textContent = 'Enrolment request sent! 🚀';
+            successMsg.textContent   = 'Merita will be in touch within 24 hours to complete your enrolment and share payment details for Cohort 2.';
+          }
+          successView.style.display = 'block';
+        } else {
+          throw new Error('Form submission failed');
+        }
+      } catch (err) {
+        submitBtn.textContent = 'Something went wrong — try WhatsApp';
+        submitBtn.disabled    = false;
       }
-
-      successView.style.display = 'block';
     }
 
     document.addEventListener('keydown', function(e) {
